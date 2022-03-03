@@ -1,0 +1,13 @@
+2022-03-01 23:55:43,469 - instabot version: 0.117.0 (bot) - INFO - Instabot version: 0.117.0 Started
+2022-03-01 23:55:43,469 - instabot version: 0.117.0 (bot) - DEBUG - Bot imported from C:\Users\user\PycharmProjects\pythonProject9\venv\lib\site-packages\instabot\bot\bot.py
+2022-03-01 23:55:43,470 - instabot version: 0.117.0 (api_login) - INFO - Not yet logged in starting: PRE-LOGIN FLOW!
+2022-03-01 23:55:43,749 - instabot version: 0.117.0 (api) - DEBUG - POST to endpoint: accounts/get_prefill_candidates/ returned response: <Response [200]>
+2022-03-01 23:55:44,073 - instabot version: 0.117.0 (api) - DEBUG - POST to endpoint: qe/sync/ returned response: <Response [200]>
+2022-03-01 23:55:44,346 - instabot version: 0.117.0 (api) - DEBUG - POST to endpoint: launcher/sync/ returned response: <Response [200]>
+2022-03-01 23:55:44,603 - instabot version: 0.117.0 (api) - DEBUG - POST to endpoint: accounts/contact_point_prefill/ returned response: <Response [200]>
+2022-03-01 23:55:45,566 - instabot version: 0.117.0 (api) - DEBUG - POST to endpoint: accounts/login/ returned response: <Response [400]>
+2022-03-01 23:55:45,566 - instabot version: 0.117.0 (api) - DEBUG - Responsecode indicates error; response content: b'{"message":"challenge_required","challenge":{"url":"https://i.instagram.com/challenge/AXH6kKmEDIHWKKhLG08aOl7CBQ8y115T8HWqzgmvFxVdw2rQvoclRBF6QEZl0AzyjvrP/963BKlpowj/","api_path":"/challenge/AXH6kKmEDIHWKKhLG08aOl7CBQ8y115T8HWqzgmvFxVdw2rQvoclRBF6QEZl0AzyjvrP/963BKlpowj/","hide_webview_header":true,"lock":true,"logout":false,"native_flow":true,"flow_render_type":0},"status":"fail","error_type":"checkpoint_challenge_required"}'
+2022-03-01 23:55:45,566 - instabot version: 0.117.0 (api) - ERROR - Request returns 400 error!
+2022-03-01 23:55:45,566 - instabot version: 0.117.0 (api) - INFO - Instagram's error message: challenge_required
+2022-03-01 23:55:45,566 - instabot version: 0.117.0 (api) - INFO - Error type: checkpoint_challenge_required
+2022-03-01 23:55:45,566 - instabot version: 0.117.0 (api) - CRITICAL - Not logged in!
