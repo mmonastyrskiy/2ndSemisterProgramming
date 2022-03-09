@@ -30,10 +30,28 @@ except Exception:
     print("Error reading configuration file")
 
 class User:
-    def __init__(self,id,name,password):
+    def __init__(self,id,login,password):
         self.id = id
-        self.name = name
+        self.login = name
         self.password = password
+	def fetch(self):
+		try:
+			mydb = conn.connect(host = host, database=dbname,user=login,password=password)
+			c = mydb.cursor()
+		except Exception as e:
+			messagebox.showerror(message=e)
+		c.execute(f"SELECT * FROM user_data WHERE 'user_id' = {self.id}")
+		data = c.fetchall()
+		surname =data[1]
+		name = data[2]
+		secondname = data[3]
+		birth_date = data[4]
+		email = data[5]
+		phone = data[6]
+		return [self.id,self.login,self.password,surname,name,secondname,birth_date,email,phone]
+		
+		
+		
 
 class Connection:
     def __init__(self,name,password):
@@ -67,7 +85,8 @@ class Connection:
                 logging.warning(f"User:{self.name} successfully logged in ")
                 Ans.pack()
                 global users
-                users.append(User(record[0][0],record[0][1],record[0][2]))
+                users.append(User(record[0][0],record[0][1],record[0][2]).fetch())
+				print(users[-1])
 
                 callback.mainloop()
 def main():
@@ -91,4 +110,3 @@ if __name__ == "__main__":
     main()
 else:
     print("This file could not be imported")
-
