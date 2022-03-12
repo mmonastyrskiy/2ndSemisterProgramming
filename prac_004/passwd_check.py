@@ -32,9 +32,8 @@ class User:
         self.login = login
         self.password = password
         if self.Auth():
-            self.Fetch()
-
-    def Fetch(self):
+            customer_data = self.Fetch()
+    def Fetch(self) -> list:
         try:
             mydb = conn.connect(host = host, database=dbname,user=login,password=password)
             c = mydb.cursor()
@@ -52,9 +51,11 @@ class User:
         email = data[0][5]
         phone = data[0][6]
         global users
+        data = [id_,self.login,surname,name,secondname,birth_date,email,phone]
         logging.warning(f"successfully fetched data:{id_},{self.login},{surname},{name},{secondname},{birth_date},{email},{phone}")
-        users.append([id_,self.login,surname,name,secondname,birth_date,email,phone])
+        users.append(data)
         print(users[-1])
+        return data
 
     def Auth(self) -> bool:
         try:
@@ -95,10 +96,12 @@ def main():
     window.title("Введите логин и пароль")
     window.geometry("230x100")
     name_l = tkinter.Label(text="Логин ").grid(row=0,column=0)
-    name = tkinter.Entry(window).grid(row=0,column=2,columnspan=3)
+    name = tkinter.Entry(window)
+    name.grid(row=0,column=2,columnspan=3)
 
     passwd_l = tkinter.Label(text="Пароль ").grid(row=1,column=0)
-    passwd = tkinter.Entry(window,show="*").grid(row=1,column=2,columnspan=3)
+    passwd = tkinter.Entry(window,show="*")
+    passwd.grid(row=1,column=2,columnspan=3)
 
     B = tkinter.Button(window,text="Войти",command= lambda: User(name.get(),passwd.get())).grid(row=2,column=1)
     window.mainloop()
