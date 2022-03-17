@@ -163,43 +163,43 @@ class User:
                     if self.Checker(old[idx],new[idx]):
                         c.execute(f"UPDATE login SET name = '{str(new[idx])}' WHERE id = {id_}")
                         mydb.commit()
-                        logging.warning(f"Some data changed on {id_} from {old} to {new}")
+                        logging.warning(f"Some data changed on {id_}  from {old} to {new}")
                 elif idx == 3:
                     #print(f"3 \t {old[idx]}\t{new[idx]}")
                     if self.Checker(old[idx],new[idx]):
                         c.execute(f"UPDATE user_data set surname = '{str(new[idx])}' WHERE user_id = {id_}")
                         mydb.commit()
-                        logging.warning(f"Some data changed on {id_} from {old} to {new}")
+                        logging.warning(f"Some data changed on {id_}  from {old} to {new}")
                 elif idx == 4:
                     #print(f"4 \t {old[idx]}\t{new[idx]}")
                     if self.Checker(old[idx],new[idx]):
                         c.execute(f"UPDATE user_data set name = '{str(new[idx])}' WHERE user_id = {id_}")
                         mydb.commit()
-                        logging.warning(f"Some data changed on {id_} from {old} to {new}")
+                        logging.warning(f"Some data changed on {id_}  from {old} to {new}")
                 elif idx ==5:
                     #print(f"5 \t {old[idx]}\t{new[idx]}")
                     if self.Checker(old[idx],new[idx]):
                         c.execute(f"UPDATE user_data set secondname = '{str(new[idx])}' WHERE user_id = {id_}")
                         mydb.commit()
-                        logging.warning(f"Some data changed on {id_} from {old} to {new}")
+                        logging.warning(f"Some data changed on {id_}  from {old} to {new}")
                 elif idx ==6:
                     #print(f"6 \t {old[idx]}\t{new[idx]}")
                     if self.DateValidator(new[idx]):
                         c.execute(f"UPDATE user_data set birth_date = '{str(new[idx])}' WHERE user_id = {id_}")
                         mydb.commit()
-                        logging.warning(f"Some data changed on {id_} from {old} to {new}")
+                        logging.warning(f"Some data changed on {id_}  from {old} to {new}")
                 elif idx == 7:
                     #print(f"7 \t {old[idx]}\t{new[idx]}")
                     if self.EmailValidator(new[idx]):
                         c.execute(f"UPDATE user_data set email = '{str(new[idx])}' WHERE user_id = {id_}")
                         mydb.commit()
-                        logging.warning(f"Some data changed on {id_} from {old} to {new}")
+                        logging.warning(f"Some data changed on {id_}  from {old} to {new}")
                 elif idx == 8:
                     #print(f"8 \t {old[idx]}\t{new[idx]}")
                     if self.PhoneValidator(new[idx]):
                         c.execute(f"UPDATE user_data set telephone = '{str(new[idx])}' WHERE user_id = {id_}")
                         mydb.commit()
-                        logging.warning(f"Some data changed on {id_} from {old} to {new}")
+                        logging.warning(f"Some data changed on {id_}  from {old} to {new}")
             else:
                 idx +=1
         
