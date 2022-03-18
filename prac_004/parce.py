@@ -94,8 +94,21 @@ def ParceStore77Net_EachSection(link):
         ParceStore77Net_EachSection(link)
 
     soup = bs(response,"lxml")
-    data = soup.find_all("div",class_="blocks_product_fix_w")
-    print(data)
+    data = soup.find_all("a",class_="bp_hover_text_but_cart")
+    #print(data)
+    data = str(data).split(' onclick="dataLayer.push({')
+    #print(data)
+    for elem in data:
+        elems = elem.split("\n")
+        property_ = []
+        for line in elems:
+            if ":" in line:
+                property_.append(tuple([re.sub(r"\s+","",line.split(":")[0]),re.sub(r"\s+","",line.split(":")[1]).split("//")[0]]))
+        print(property_)
+    #regexp = r'onclick="dataLayer.push\({.*}\);">'
+    #json = re.findall(regexp,str(data))
+    #print(json)
+
 def ParceStore77Net():
     URL = "https://store77.net/"
     sections = ParceStore77Net_Sections(URL)
