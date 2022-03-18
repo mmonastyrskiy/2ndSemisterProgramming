@@ -1,26 +1,27 @@
 import requests as r
 from bs4 import BeautifulSoup as bs 
 import mysql.connector as conn
-import os
+import time
 import configparser
 import logging
 import re
-import colorama as color 
-
+from tqdm import tqdm
+import sys
+import pandas as pd
+#import colorama as color 
+blacklisted_url = ["https://store77.net/chasy_apple_watch_nike_se"]
 goods = []
-
+sys.setrecursionlimit(100)
 class NotOKResponseCode(Exception):
     def __init__(self,message):
         self.message = message
-        self.code = code
-        self.data = data
 
 CONFIG_FILE = "config.ini"
 
 logging.basicConfig(filename='access.log')
 logging.basicConfig(format='%(asctime)s %(message)s')
 
-color.init(autoreset=True)
+#color.init(autoreset=True)
 
 try:
     config = configparser.ConfigParser()
@@ -40,7 +41,7 @@ def GetDataFromURL(url: str) -> str:
     if response.status_code == 200:
         return response.text
     else:
-        raise NotOKResponseCode(f"Something is wrong with the url:{url}, page returned code: {status_code}")
+        raise NotOKResponseCode(f"Something is wrong with the url:{url}, page returned code: {response.status_code}")
 
 def ParceStore77Net_Sections(url):
     try:
@@ -55,7 +56,10 @@ def ParceStore77Net_Sections(url):
     data = data[1:-1]
     cleared = []
     sections = []
+    global blacklisted_url
     for elem in data:
+        if elem in blacklisted_url:
+            continue
         if "</a></li>" in elem:
             elem=elem.replace("</a></li>","")
         if '!--' in elem:
@@ -84,37 +88,75 @@ def ParceStore77Net_Sections(url):
     return sections
 
 
+def SaveData():
+    global goods
+    arts = [elem[0] for elem in goods]
+    name = [elem[1] for elem in goods]
+    price = [elem[2] for elem in goods]
+    brand = [elem[3] for elem in goods]
+    cat = [elem[4] for elem in goods]
+    df = pd.DataFrame({"art":arts,"name":name,"price":price,"brand":brand,"category":cat})
+    df.to_csv("backup.csv")
+    try:
+        mydb=conn.connect(host=host,database=dbname,user=login,password=password)
+        c = mydb.cursor()
+    except Exception as e:
+        print("Error Connecting Database")
+    for i in tqdm(range(0,len(goods))):
+        c.execute(f"INSERT INTO catalog (art,name,price,brand,category) VALUES ({arts[i]},{name[i]},{price[i]},{brand[i]},{cat[i]})")
+        mydb.commit()
+
+
+
 def ParceStore77Net_EachSection(link):
+    print(f"Parcing :{link}")
     try:
         response = GetDataFromURL(link)
     except RecursionError:
         print("Website died")
+        return
     except NotOKResponseCode:
-        os.sleep(3)
+        time.sleep(10)
         ParceStore77Net_EachSection(link)
 
     soup = bs(response,"lxml")
     data = soup.find_all("a",class_="bp_hover_text_but_cart")
     #print(data)
     data = str(data).split(' onclick="dataLayer.push({')
-    #print(data)
+    #print(data[3])
+    parced_data = []
     for elem in data:
+        #print(parced_data)
         elems = elem.split("\n")
         property_ = []
         for line in elems:
             if ":" in line:
-                property_.append(tuple([re.sub(r"\s+","",line.split(":")[0]),re.sub(r"\s+","",line.split(":")[1]).split("//")[0]]))
-        print(property_)
-    #regexp = r'onclick="dataLayer.push\({.*}\);">'
-    #json = re.findall(regexp,str(data))
-    #print(json)
+                property_.append(tuple([re.sub(r"\s+"," ",line.split(":")[0]),re.sub(r"\s+"," ",line.split(":")[1]).split("//")[0]]))
+                #print(property_)
+        property_ = property_[9:-1]
+        try:
+            art = property_[2][1]
+            name =property_[1][1]
+            price = property_[3][1]
+            brand = property_[4][1]
+            cat = property_[5][1]
+            parced_data.append([art,name,price,brand,cat])
+        except Exception:
+            pass
+    global goods
+    for position in parced_data:
+        goods.append(position)
+
 
 def ParceStore77Net():
     URL = "https://store77.net/"
     sections = ParceStore77Net_Sections(URL)
-    for page in sections:
+    for page in tqdm(sections):
         ParceStore77Net_EachSection(URL + page[0][1:])
-        break
+        time.sleep(3)
+    global goods
+    print(len(goods))
+    SaveData()
 
 
 
