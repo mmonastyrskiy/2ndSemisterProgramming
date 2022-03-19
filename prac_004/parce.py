@@ -107,20 +107,24 @@ def SaveData():
         except Exception as e:
             print(e,"\a")
             time.sleep(5)
-            SaveData()
+            #SaveData()
     try:
         mydb=conn.connect(host=host,database=dbname,user=login,password=password)
         c = mydb.cursor()
     except Exception as e:
         print("Error Connecting Database")
     for i in tqdm(range(0,len(goods))):
-        c.execute(f"INSERT INTO catalog (art,name,price,brand,category) VALUES ('{arts[i]}','{name[i]}','{price[i]}','{brand[i]}','{cat[i]}')")
-        mydb.commit()
+        try:
+            c.execute(f"INSERT INTO catalog (art,name,price,brand,category) VALUES ('{arts[i]}','{name[i]}','{price[i]}','{brand[i]}','{cat[i]}')")
+            mydb.commit()
+        except Exception:
+            print("skip")
+            continue
 
 
 
 def ParceStore77Net_EachSection(link):
-    print("")
+    print("New line")
     try:
         response = GetDataFromURL(link)
     except RecursionError:
@@ -163,6 +167,7 @@ def ParceStore77Net():
     URL = "https://store77.net/"
     sections = ParceStore77Net_Sections(URL)
     for page in tqdm(sections):
+        print(page)
         if URL + page[0][1:] in blacklisted_url:
             continue
         ParceStore77Net_EachSection(URL + page[0][1:])
