@@ -37,7 +37,10 @@ except Exception:
     print("Error reading configuration file")
 
 def GetDataFromURL(url: str) -> str:
-    response = r.get(url)
+    try:
+        response = r.get(url)
+    except Exception:
+        raise NotOKResponseCode("Connection died")
     if response.status_code == 200:
         return response.text
     else:
@@ -58,8 +61,6 @@ def ParceStore77Net_Sections(url):
     sections = []
     global blacklisted_url
     for elem in data:
-        if elem in blacklisted_url:
-            continue
         if "</a></li>" in elem:
             elem=elem.replace("</a></li>","")
         if '!--' in elem:
@@ -89,27 +90,37 @@ def ParceStore77Net_Sections(url):
 
 
 def SaveData():
-    global goods
-    arts = [elem[0] for elem in goods]
-    name = [elem[1] for elem in goods]
-    price = [elem[2] for elem in goods]
-    brand = [elem[3] for elem in goods]
-    cat = [elem[4] for elem in goods]
-    df = pd.DataFrame({"art":arts,"name":name,"price":price,"brand":brand,"category":cat})
-    df.to_csv("backup.csv")
+    try:
+        global goods
+        goods = list(set(goods))
+        arts = [elem[0] for elem in goods]
+        name = [elem[1] for elem in goods]
+        price = [elem[2] for elem in goods]
+        brand = [elem[3] for elem in goods]
+        cat = [elem[4] for elem in goods]
+    except Exception as e:
+        print(e)
+    finally:
+        try:
+            df = pd.DataFrame({"art":arts,"name":name,"price":price,"brand":brand,"category":cat})
+            df.to_csv("backup.csv",encoding="cp1251")
+        except Exception as e:
+            print(e,"\a")
+            time.sleep(5)
+            SaveData()
     try:
         mydb=conn.connect(host=host,database=dbname,user=login,password=password)
         c = mydb.cursor()
     except Exception as e:
         print("Error Connecting Database")
     for i in tqdm(range(0,len(goods))):
-        c.execute(f"INSERT INTO catalog (art,name,price,brand,category) VALUES ({arts[i]},{name[i]},{price[i]},{brand[i]},{cat[i]})")
+        c.execute(f"INSERT INTO catalog (art,name,price,brand,category) VALUES ('{arts[i]}','{name[i]}','{price[i]}','{brand[i]}','{cat[i]}')")
         mydb.commit()
 
 
 
 def ParceStore77Net_EachSection(link):
-    print(f"Parcing :{link}")
+    print("")
     try:
         response = GetDataFromURL(link)
     except RecursionError:
@@ -152,6 +163,8 @@ def ParceStore77Net():
     URL = "https://store77.net/"
     sections = ParceStore77Net_Sections(URL)
     for page in tqdm(sections):
+        if URL + page[0][1:] in blacklisted_url:
+            continue
         ParceStore77Net_EachSection(URL + page[0][1:])
         time.sleep(3)
     global goods
