@@ -152,6 +152,7 @@ def SaveData():
     data = list(map(str,data))
     if not path.exists("res.xlsx")
         for i in tqdm(range(0,len(arts))):
+            print()
             df = pd.DataFrame({"arts":arts,"name":name,"price":price,"brand":brand,"cat":cat,"dir_link":dir_link,"tech_data":data})
             df.to_excel("res.xlsx")
             Insert_to_database("res.xlsx")
