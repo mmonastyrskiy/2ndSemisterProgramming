@@ -8,7 +8,9 @@ import re
 from tqdm import tqdm
 import sys
 import pandas as pd
-#import colorama as color 
+import os.path as path
+import cyrtranslit as trans
+import os
 blacklisted_url = ["https://store77.net/chasy_apple_watch_nike_se"]
 goods = []
 sys.setrecursionlimit(100)
@@ -21,7 +23,6 @@ CONFIG_FILE = "config.ini"
 logging.basicConfig(filename='access.log')
 logging.basicConfig(format='%(asctime)s %(message)s')
 
-#color.init(autoreset=True)
 
 try:
     config = configparser.ConfigParser()
@@ -53,7 +54,6 @@ def ParceStore77Net_Sections(url):
         print(color.Fore.RED + "Seems like host is down, check manually")
     soup = bs(resp,"lxml")
     sections = soup.find_all("ul",class_ = "catalog_menu_sub_third")
-    #print(sections)
     regexp = "[^<li><a href=].*[^</a></li>]"
     data = re.findall(regexp,str(sections))
     data = data[1:-1]
@@ -85,7 +85,6 @@ def ParceStore77Net_Sections(url):
             sections.append(tuple([link[:-1],name[:-1]]))
         except Exception:
             print(line)
-    #print(sections)
     return sections
 
 
@@ -103,6 +102,42 @@ def Insert_to_database(file):
         mydb.commit()
 
 
+def ParceStore77Net_Page_and_deps(urls):
+    for link in tqdm(urls):
+        html = GetDataFromURL(link)
+        soup = bs(html,"lxml")
+        img = soup.find("img",href=True)
+        try:
+            os.chdir("deps")
+            with open(str(urls.index(link)),"wb") as f:
+                f.write(r.get(img["href"]).content)
+        except Exception as e:
+            print(e)
+        try:
+            chars = soup.find_all("tr")
+            parced_chars = []
+            for c in chars:
+                data = c.split(r"\n")
+                tmp = []
+                for i in range(0,len(data)):
+                    if i == 0:
+                        text = data[i].replace('<td class="tt_td_title">',"")
+                        text = text.replace('</td>',"")
+                        text = text.strip()
+                        tmp.append(text)
+                    else:
+                        if i == 1:
+                            text = data[i].replace("<td>","")
+                            text = text.replace("</td>","")
+                            text = text.strip()
+                            tmp.append(text)
+                    parced_chars.append(tmp)
+            return (link,parced_chars)
+        except Exception as e:
+            print(e)
+
+
+
 def SaveData():
     
     global goods
@@ -111,9 +146,13 @@ def SaveData():
     price = [elem[2] for elem in goods]
     brand = [elem[3] for elem in goods]
     cat = [elem[4] for elem in goods]
+    dir_link = [elem[5] for elem in goods]
+    tech_data = ParceStore77Net_Page_and_deps(dir_link)
+    data = tech_data[1]
+    data = list(map(str,data))
     if not path.exists("res.xlsx")
         for i in tqdm(range(0,len(arts))):
-            df = pd.DataFrame({"arts":arts,"name":name,"price":price,"brand":brand,"cat":cat})
+            df = pd.DataFrame({"arts":arts,"name":name,"price":price,"brand":brand,"cat":cat,"dir_link":dir_link,"tech_data":data})
             df.to_excel("res.xlsx")
             Insert_to_database("res.xlsx")
     else:
@@ -122,7 +161,6 @@ def SaveData():
 
 
 def ParceStore77Net_EachSection(link):
-    print("New line")
     try:
         response = GetDataFromURL(link)
     except RecursionError:
@@ -134,18 +172,14 @@ def ParceStore77Net_EachSection(link):
 
     soup = bs(response,"lxml")
     data = soup.find_all("a",class_="bp_hover_text_but_cart")
-    #print(data)
     data = str(data).split(' onclick="dataLayer.push({')
-    #print(data[3])
     parced_data = []
     for elem in data:
-        #print(parced_data)
         elems = elem.split("\n")
         property_ = []
         for line in elems:
             if ":" in line:
                 property_.append(tuple([re.sub(r"\s+"," ",line.split(":")[0]),re.sub(r"\s+"," ",line.split(":")[1]).split("//")[0]]))
-                #print(property_)
         property_ = property_[9:-1]
         try:
             art = property_[2][1]
@@ -153,7 +187,7 @@ def ParceStore77Net_EachSection(link):
             price = property_[3][1]
             brand = property_[4][1]
             cat = property_[5][1]
-            parced_data.append([art,name,price,brand,cat])
+            parced_data.append([art,name,price,brand,cat,link + trans.to_latin(name).replace(" ","_")])
         except Exception:
             pass
     global goods
@@ -165,13 +199,11 @@ def ParceStore77Net():
     URL = "https://store77.net/"
     sections = ParceStore77Net_Sections(URL)
     for page in tqdm(sections):
-        print(page)
         if URL + page[0][1:] in blacklisted_url:
             continue
         ParceStore77Net_EachSection(URL + page[0][1:])
         time.sleep(3)
     global goods
-    print(len(goods))
     SaveData()
 
 
