@@ -1,0 +1,8 @@
+WARNING:root:User:admin successfully logged in 
+WARNING:root:successfully fetched data:1,admin,admin,Монастырский,Максим,Олегович,2003-01-30,m_monastyrskiy@mail.ru,89031329070
+WARNING:root:successfully fetched data:1,admin,admin,Монастырский,Максим,Олегович,2003-01-30,m_monastyrskiy@mail.ru,89031329070
+WARNING:root:Someone entered wrong creds:admin::admin1
+WARNING:root:Someone entered uknown username:admin1
+WARNING:root:User:admin successfully logged in 
+WARNING:root:successfully fetched data:1,admin,admin,Монастырский,Максим,Олегович,2003-01-30,m_monastyrskiy@mail.ru,89031329070
+WARNING:root:Someone entered uknown username:admin1

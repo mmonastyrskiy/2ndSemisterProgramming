@@ -1,5 +1,5 @@
 import requests as r
-from bs4 import BeautifulSoup as bs
+from bs4 import BeautifulSoup as bs 
 import mysql.connector as conn
 import time
 import configparser
@@ -8,8 +8,7 @@ import re
 from tqdm import tqdm
 import sys
 import pandas as pd
-from copy import copy
-#import colorama as color
+#import colorama as color 
 blacklisted_url = ["https://store77.net/chasy_apple_watch_nike_se"]
 goods = []
 sys.setrecursionlimit(100)
@@ -39,24 +38,19 @@ except Exception:
 
 def GetDataFromURL(url: str) -> str:
     try:
-        print("Touch")
-        response = r.get(url,verify=False)
-        #print(response.status_code)
+        response = r.get(url)
     except Exception:
-        #print(response.ststus_code)
         raise NotOKResponseCode("Connection died")
     if response.status_code == 200:
         return response.text
     else:
-        print(response.status_code)
         raise NotOKResponseCode(f"Something is wrong with the url:{url}, page returned code: {response.status_code}")
 
 def ParceStore77Net_Sections(url):
     try:
         resp = GetDataFromURL(url)
     except NotOKResponseCode:
-        print("Seems like host is down, check manually")
-        exit(1)
+        print(color.Fore.RED + "Seems like host is down, check manually")
     soup = bs(resp,"lxml")
     sections = soup.find_all("ul",class_ = "catalog_menu_sub_third")
     #print(sections)
@@ -110,7 +104,7 @@ def Insert_to_database(file):
 
 
 def SaveData():
-
+    
     global goods
     arts = [elem[0] for elem in goods]
     name = [elem[1] for elem in goods]
@@ -139,7 +133,7 @@ def ParceStore77Net_EachSection(link):
         ParceStore77Net_EachSection(link)
 
     soup = bs(response,"lxml")
-    data = soup.find_all("a",class_="bp_hover_text_but_cart",href=True)
+    data = soup.find_all("a",class_="bp_hover_text_but_cart")
     #print(data)
     data = str(data).split(' onclick="dataLayer.push({')
     #print(data[3])
@@ -149,13 +143,9 @@ def ParceStore77Net_EachSection(link):
         elems = elem.split("\n")
         property_ = []
         for line in elems:
-            #print(line)
             if ":" in line:
                 property_.append(tuple([re.sub(r"\s+"," ",line.split(":")[0]),re.sub(r"\s+"," ",line.split(":")[1]).split("//")[0]]))
-                print(property_)
-            else:
-                #print(line)
-                pass
+                #print(property_)
         property_ = property_[9:-1]
         try:
             art = property_[2][1]
