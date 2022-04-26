@@ -12,6 +12,9 @@ import urllib3
 import os.path as path
 from copy import copy
 import os
+import shutil
+
+
 URL = "https://store77.net/"
 
 obj_pointer = 0
@@ -53,7 +56,7 @@ def GetDataFromURL(url: str) -> str:
     try:
         response = r.get(url,verify=False)
     except Exception:
-        raise NotOKResponseCode("Connection died")
+        raise NotOKResponseCode(f"Something is wrong with the url:{url}, page returned code: {response.status_code}")
     if response.status_code == 200:
         return response.text
     else:
@@ -105,8 +108,7 @@ def ParceStore77Net_Sections(url):
 
 
 def ParceStore77Deps(file):
-    chars = []
-    chars_dict = {}
+    desc = ["","","","","",""]
     try:
         df = pd.read_excel(file)
     except Exception as e:
@@ -114,38 +116,74 @@ def ParceStore77Deps(file):
     df = df.reset_index()
     for idx, row in tqdm(df.iterrows()):
         try:
-            data = GetDataFromURL(row["link"].replace("//","/"))
-            #print(row["link"])
+            data = GetDataFromURL(row["link"])
             soup = bs(data,"lxml")
-            images = soup.find_all("img",class_="")
+            #print(row['link'])
+            global URL
+            divs = soup.find_all("div",class_="slick-offer-img-big")
+            for div in divs:
+                img = div.find("img")
+                image_src = img["src"]
+                #print(image_src)
+
         except Exception as e:
-            print("Image load fail")
+            ##print("Image load fail")
             print(e)
-        links=[]
-        global obj_pointer
         try:
-            for img in images:
-                print(img["src"])
-                img_data = GetDataFromURL(img["src"]).text
-                with open("." + os.sep + "img" + os.sep + str(obj_pointer) + ".jpg","wb") as f:
-                    f.write(bytes(img_data))
+            print(image_src)
+            try:
+                if not "https" in image_src:
+                    image_src ="https://store77.net"+image_src
+                response = r.get(image_src,stream=True,verify=False)
+            except Exception as e:
+                print(e)
+            with open("." + os.sep + "img" + os.sep + str(idx+1)+"."+image_src.split(".")[-1],"wb") as f:
+                shutil.copyfileobj(response.raw,f)
         except Exception:
-            pass
+            print(e)
         try:
             data = GetDataFromURL(row["link"])
-            print(row["link"])
+            #print(row["link"])
             soup = bs(data,"lxml")
-            Description = soup.find("div",class_ = "col-sm-6 wrap_descr_b").string
+            descr=""
+            Description = soup.find("div",class_ = "col-sm-6 wrap_descr_b")
+            regex_num = re.compile('.+')
+            i=0
+            for a in soup:
+                a = str(a)
+                try:
+                    #a = a.replace( '<br/>', "")
+                    #a = a.replace(r'\r', "")
+                    #a = a.replace('<b>', "")
+                    #a = a.replace('</b>', "")
+                    a = a.replace('<div class="col-sm-6 wrap_descr_b">', "")
+                    a = a.replace('</div>', "")
+                except:
+                    pass
+                descr.join(a)
+                if descr=="":
+                    descr="No Description"
+            desc.append(descr)
+                #print(desc)
         except Exception as e:
-            print("Description loading Error")
+            ##print("Description loading Error")
             print(e)
-    obj_pointer +=1
+    #obj_pointer +=1
+    df = pd.read_excel("res.xlsx")
+    df = df.reset_index()
+    while True:
+        if df.shape[0] != len(desc):
+            desc.append("Bloob")
+        else:
+            df["D"] = desc
+            df.to_excel("res.xlsx")
+            break
 
 
 
 
 
-def Insert_to_database(file):
+def Insert_to_database(file,full=False):
     df = pd.read_excel(file)
     try:
         mydb=conn.connect(host=host,database=dbname,user=login,password=password)
@@ -153,9 +191,13 @@ def Insert_to_database(file):
     except Exception as e:
         print(e)
     df = df.reset_index()
-    for index, row in df.iterrows():
-        #c.execute(f"INSERT INTO catalog (art,name,price,brand,category,links) VALUES ('{row['arts'][1:-2]}','{row['name'][1:-2]}','{str(row['price'][0:-1])}',{row['brand'][1:-2]},{row['cat'][1:-2]},{row['link'][1:-2]})")
-        mydb.commit()
+    for index, row in tqdm(df.iterrows()):
+        if not full:
+            c.execute(f"INSERT INTO catalog (art,name,price,brand,category,links) VALUES ('{row['arts'][1:-2]}','{row['name'][1:-2]}','{str(row['price'][0:-1])}','{row['brand'][1:-2]}','{row['cat'][1:-2]}','{row['link']}')")
+            mydb.commit()
+        else:
+            c.execute(f"INSERT INTO catalog (art,name,price,brand,category,links,descr) VALUES ( '{row['arts'][1:-2]}','{row['name'][1:-2]}','{str(row['price'][0:-1])}','{row['brand'][1:-2]}','{row['cat'][1:-2]}','{row['link']}','{row['D']}' )")
+            mydb.commit()
 
 
 def SaveData():
@@ -170,12 +212,7 @@ def SaveData():
     if not path.exists("res.xlsx"):
         for i in tqdm(range(0,len(arts))):
             df = pd.DataFrame({"arts":arts,"name":name,"price":price,"brand":brand,"cat":cat,"link":dlink})
-            df.to_excel("res.xlsx")
             Insert_to_database("res.xlsx")
-    else:
-        Insert_to_database("res.xlsx")
-
-
 
 def ParceStore77Net_EachSection(link):
     #print("New line")
@@ -222,7 +259,7 @@ def ParceStore77Net_EachSection(link):
             cat = property_[5][1]
             dlink = parced_links[idx]
             idx += 1
-            print(dlink)
+            #print(dlink)
             global URL
             parced_data.append([art,name,price,brand,cat,URL[:-1] + dlink])
         except Exception:
@@ -245,6 +282,7 @@ def ParceStore77Net():
     print(len(goods))
     SaveData()
     ParceStore77Deps("res.xlsx")
+    Insert_to_database("res.xlsx",full=True)
 
 
 
