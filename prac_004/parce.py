@@ -21,7 +21,7 @@ obj_pointer = 0
 
 urllib3.disable_warnings()
 #import colorama as color
-blacklisted_url = ["https://store77.net/chasy_apple_watch_nike_se"]
+blacklisted_url = ["https://store77.net/chasy_apple_watch_nike_se",'https://store77.net/apple_iphone_12_mini/telefon_apple_iphone_12_mini_64gb_product_red_ru_a/']
 goods = []
 links = []
 
@@ -108,7 +108,7 @@ def ParceStore77Net_Sections(url):
 
 
 def ParceStore77Deps(file):
-    desc = ["","","","","",""]
+    desc=[]
     try:
         df = pd.read_excel(file)
     except Exception as e:
@@ -143,41 +143,20 @@ def ParceStore77Deps(file):
             print(e)
         try:
             data = GetDataFromURL(row["link"])
-            #print(row["link"])
-            soup = bs(data,"lxml")
-            descr=""
-            Description = soup.find("div",class_ = "col-sm-6 wrap_descr_b")
-            regex_num = re.compile('.+')
-            i=0
-            for a in soup:
-                a = str(a)
-                try:
-                    #a = a.replace( '<br/>', "")
-                    #a = a.replace(r'\r', "")
-                    #a = a.replace('<b>', "")
-                    #a = a.replace('</b>', "")
-                    a = a.replace('<div class="col-sm-6 wrap_descr_b">', "")
-                    a = a.replace('</div>', "")
-                except:
-                    pass
-                descr.join(a)
-                if descr=="":
-                    descr="No Description"
-            desc.append(descr)
-                #print(desc)
-        except Exception as e:
-            ##print("Description loading Error")
+        except Exception:
             print(e)
-    #obj_pointer +=1
+        #print(row["link"])
+        soup = bs(data,"lxml")
+        Description = soup.find("div",class_ = "col-sm-6 wrap_descr_b")
+        Description = str(Description)
+        Description = Description.replace('<div class="col-sm-6 wrap_descr_b>',"")
+        Description = Description.replace("</div>","")
+        desc.append(Description)
     df = pd.read_excel("res.xlsx")
-    df = df.reset_index()
-    while True:
-        if df.shape[0] != len(desc):
-            desc.append("Bloob")
-        else:
-            df["D"] = desc
-            df.to_excel("res.xlsx")
-            break
+    df["D"] = desc
+    df.to_excel("res.xlsx")
+
+
 
 
 
@@ -193,10 +172,14 @@ def Insert_to_database(file,full=False):
     df = df.reset_index()
     for index, row in tqdm(df.iterrows()):
         if not full:
-            c.execute(f"INSERT INTO catalog (art,name,price,brand,category,links) VALUES ('{row['arts'][1:-2]}','{row['name'][1:-2]}','{str(row['price'][0:-1])}','{row['brand'][1:-2]}','{row['cat'][1:-2]}','{row['link']}')")
+            req_str = f"INSERT INTO catalog (art,name,price,brand,category,links) VALUES ('{row['arts']}','{row['name'][1:-2]}','{str(row['price'])}','{row['brand']}','{row['cat']}','{row['link']}')"
+            print(req_str)
+            c.execute(req_str)
             mydb.commit()
         else:
-            c.execute(f"INSERT INTO catalog (art,name,price,brand,category,links,descr) VALUES ( '{row['arts'][1:-2]}','{row['name'][1:-2]}','{str(row['price'][0:-1])}','{row['brand'][1:-2]}','{row['cat'][1:-2]}','{row['link']}','{row['D']}' )")
+            req_str = f"INSERT INTO catalog (art,name,price,brand,category,links,descr) VALUES ( '{row['arts']}','{row['name']}','{str(row['price'])}','{row['brand']}','{row['cat']}','{row['link']}','{row['D']}' )"
+            print(req_str)
+            c.execute(req_str)
             mydb.commit()
 
 
@@ -212,7 +195,8 @@ def SaveData():
     if not path.exists("res.xlsx"):
         for i in tqdm(range(0,len(arts))):
             df = pd.DataFrame({"arts":arts,"name":name,"price":price,"brand":brand,"cat":cat,"link":dlink})
-            Insert_to_database("res.xlsx")
+            df.to_excel("res.xlsx")
+            #Insert_to_database("res.xlsx")
 
 def ParceStore77Net_EachSection(link):
     #print("New line")
