@@ -21,7 +21,7 @@ obj_pointer = 0
 
 urllib3.disable_warnings()
 #import colorama as color
-blacklisted_url = ["https://store77.net/chasy_apple_watch_nike_se",'https://store77.net/apple_iphone_12_mini/telefon_apple_iphone_12_mini_64gb_product_red_ru_a/']
+blacklisted_url = ["https://store77.net/chasy_apple_watch_nike_se"]
 goods = []
 links = []
 
@@ -171,15 +171,29 @@ def Insert_to_database(file,full=False):
         print(e)
     df = df.reset_index()
     for index, row in tqdm(df.iterrows()):
+        article ="".join(row['arts'])
+        name ="".join(row['name'])
+        price ="".join(str(row['price']))
+        brand ="".join(row['brand'])
+        category ="".join(row['cat'])
+        link ="".join(row['link'])
+        Description ="".join(row['D'])
+
         if not full:
-            req_str = f"INSERT INTO catalog (art,name,price,brand,category,links) VALUES ('{row['arts']}','{row['name'][1:-2]}','{str(row['price'])}','{row['brand']}','{row['cat']}','{row['link']}')"
+            req_str = f"INSERT INTO catalog (art,name,price,brand,category,links) VALUES ('{article[1:-2]}','{name[1:-2]}','{str(price)[:-2]}','{brand[1:-2]}','{category[1:-2]}','{link}')"
             print(req_str)
-            c.execute(req_str)
+            try:
+                c.execute(req_str)
+            except Exception as e:
+                print(e)
             mydb.commit()
         else:
-            req_str = f"INSERT INTO catalog (art,name,price,brand,category,links,descr) VALUES ( '{row['arts']}','{row['name']}','{str(row['price'])}','{row['brand']}','{row['cat']}','{row['link']}','{row['D']}' )"
+            req_str = f"INSERT INTO catalog (art,name,price,brand,category,links,descr) VALUES ({article[1:-2]},{name[1:-2]},'{str(price)[:-2]}',{brand[1:-2]},{category[1:-2]},'{link}','{str(Description)}')"
             print(req_str)
-            c.execute(req_str)
+            try:
+                c.execute(req_str)
+            except Exception as e:
+                print(e)
             mydb.commit()
 
 
