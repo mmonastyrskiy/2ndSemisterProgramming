@@ -1,31 +1,12 @@
 from django.db import models
 
-
-class Brand(models.Model):
-	self_id = models.IntegerField()
-	Brand_name = models.CharField(max_length=100)
-	description = models.TextField()
-
-
-
-class Catalog(models.Model):
-	id_parent = models.IntegerField()
-	self_id = models.IntegerField()
-	name = models.CharField(max_length=1000)
-	text_html = models.TextField()
-
-
-class Product(models.Model):
-	self_id = models.IntegerField()
-	arts = models.CharField(max_length=100)
-	name = models.CharField(max_length=100)
-	price = models.IntegerField()
-	brand = models.ForeignKey(Brand,on_delete=models.CASCADE)
-	category = models.ForeignKey(Catalog, on_delete=models.CASCADE)
-	link = models.CharField(max_length=1000)
-	description = models.TextField()
-class ProductPhoto(models.Model):
-	product_id = models.ForeignKey(Product,on_delete=models.CASCADE)
-	filename = models.CharField(max_length=100)
-
 # Create your models here.
+class Product(models.Model):
+	#Product_id = models.IntegerField()
+	Product_art = models.CharField(max_length = 1000)
+	Product_name = models.CharField(max_length= 1000)
+	Product_price = models.CharField(max_length=1000)
+	Product_brand = models.CharField(max_length= 1000)
+	Product_category = models.CharField(max_length = 1000)
+	Product_origin_link = models.CharField(max_length = 1000)
+	Product_description = models.TextField()
